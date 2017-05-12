@@ -48,7 +48,7 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private EditText edittext;
-    private EditText edittext2;
+    //private EditText edittext2;
     int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
@@ -105,14 +105,14 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         final PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-        edittext2 = (EditText) findViewById(R.id.editText2);
+        //edittext2 = (EditText) findViewById(R.id.editText2);
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
                // Log.i(TAG, "Place: " + place.getName());
                 //LatLng Endloc = place.getLatLng();
-                edittext2.setText(String.valueOf(place.getLatLng()));
+            //    edittext2.setText(String.valueOf(place.getLatLng()));
                // GoogleMap map;
 
                 // ... get a map.
