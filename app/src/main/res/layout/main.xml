@@ -44,18 +44,4 @@
         android:layout_below="@+id/editText"
         android:layout_centerHorizontal="true" />
 
-    <EditText
-        android:id="@+id/editText2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Name"
-        android:layout_below="@+id/place_autocomplete_fragment"
-        android:layout_alignLeft="@+id/place_autocomplete_fragment"
-        android:layout_alignStart="@+id/place_autocomplete_fragment"
-        android:layout_marginLeft="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="14dp" />
-
 </RelativeLayout>

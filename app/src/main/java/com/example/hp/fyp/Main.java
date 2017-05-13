@@ -29,6 +29,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -45,10 +46,10 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private GoogleMap mMap;
+    private GoogleMap googleMap;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private EditText edittext;
-    //private EditText edittext2;
     int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
@@ -72,9 +73,13 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         mapFragment.getMapAsync(this);
 
 
+
+
     }
     protected void onStart() {
         mGoogleApiClient.connect();
+
+
         super.onStart();
     }
 
@@ -85,8 +90,8 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
-        // Add a marker in Sydney, Australia,
-        // and move the map's camera to the same location.
+
+        this.googleMap = googleMap;
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
@@ -96,31 +101,45 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
         googleMap.setMyLocationEnabled(true);
 
-       /* LatLng sydney = new LatLng(24.8614622, 67.0099388);
-        googleMap.addMarker(new MarkerOptions().position(sydney)
-                .title("Marker in Sydney"));
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        */
-       // final GoogleMap googleMap;
         final PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-        //edittext2 = (EditText) findViewById(R.id.editText2);
+        //Code for restricting autocomplete results within karachi
+       /* autocompleteFragment.setBoundsBias(new LatLngBounds(
+                new LatLng(24, 66),
+                new LatLng(25, 67)));*/
+
+
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
-               // Log.i(TAG, "Place: " + place.getName());
-                //LatLng Endloc = place.getLatLng();
-            //    edittext2.setText(String.valueOf(place.getLatLng()));
-               // GoogleMap map;
 
-                // ... get a map.
-                // Add a thin red line from London to New York.
-                Polyline line = googleMap.addPolyline(new PolylineOptions()
-                        .add(new LatLng(24.8614622, 67.0099388), new LatLng(24.932895,67.111452))
-                        .width(5)
-                        .color(Color.RED));
+                //My start position
+                mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                        mGoogleApiClient);
+
+                //Draw route(line) from start to end position
+                PolylineOptions rectOptions = new PolylineOptions()
+                        .add(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                        .add(new LatLng(place.getLatLng().latitude, place.getLatLng().longitude))
+                        .geodesic(true);
+                Polyline polyline = googleMap.addPolyline(rectOptions);
+
+
+                //Work for zooming camera position in the route
+                LatLngBounds.Builder boundsbuilder = new LatLngBounds.Builder();
+                LatLng StartLoc = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
+                LatLng EndLoc = new LatLng(place.getLatLng().latitude, place.getLatLng().longitude);
+                boundsbuilder.include(StartLoc);
+                boundsbuilder.include(EndLoc);
+                int routePadding = 100;
+                LatLngBounds latLngBounds = boundsbuilder.build();
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,routePadding));
+
+                //adding marker at the destination
+                googleMap.addMarker(new MarkerOptions().position(EndLoc));
+
         }
 
             @Override
@@ -130,6 +149,8 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
             }
         });
     }
+
+    //This method will be used when we ask for permission on runtime inside else of checking permission code
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
@@ -143,6 +164,8 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         }
     }
 
+
+    //code to get current location and put it on the start location text field
     @Override
     public void onConnected(Bundle connectionHint) {
         edittext = (EditText) findViewById(R.id.editText);
@@ -155,12 +178,19 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
             try {
                 addresses = geocoder.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude(), 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
+                LatLng StartLoc = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(StartLoc,17));
+
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             String address = addresses.get(0).getAddressLine(0);
             edittext.setText(address);
+
+
+
 
         }
     }
