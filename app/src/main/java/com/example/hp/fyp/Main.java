@@ -2,6 +2,7 @@ package com.example.hp.fyp;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -10,9 +11,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -38,6 +47,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
+import static android.R.id.toggle;
+
 /**
  * Created by HP on 5/11/2017.
  */
@@ -51,11 +62,54 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     private Location mLastLocation;
     private EditText edittext;
     int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+    private String[] mPlanetTitles;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        ////////////////Navigation drawer work//////////////////
+        mPlanetTitles = getResources().getStringArray(R.array.menu_array);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+
+        // Set the adapter for the list view
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+                R.layout.drawer_list_item, mPlanetTitles));
+        // Set the list's click listener
+        //mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
+
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                mDrawerLayout,         /* DrawerLayout object */
+                R.string.drawer_open,  /* "open drawer" description */
+                R.string.drawer_close  /* "close drawer" description */
+        ) {
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                //getActionBar().setTitle(mTitle);
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                //getActionBar().setTitle(mDrawerTitle);
+            }
+        };
+
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+       getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDefaultDisplayHomeAsUpEnabled(false);
+       mDrawerToggle.setDrawerIndicatorEnabled(true);
+       mDrawerToggle.setHomeAsUpIndicator(R.drawable.ic_drawer);
+
 
         // Create an instance of GoogleAPIClient.
 
@@ -76,6 +130,31 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
 
     }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Pass the event to ActionBarDrawerToggle, if it returns
+        // true, then it has handled the app icon touch event
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        // Handle your other action bar items...
+
+        return super.onOptionsItemSelected(item);
+    }
     protected void onStart() {
         mGoogleApiClient.connect();
 
@@ -87,6 +166,17 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         mGoogleApiClient.disconnect();
         super.onStop();
     }
+
+    //if want other menus at top then use this
+    /* @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+        */
+
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
@@ -188,6 +278,7 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
             String address = addresses.get(0).getAddressLine(0);
             edittext.setText(address);
+            edittext.setEnabled(false);
 
 
 
