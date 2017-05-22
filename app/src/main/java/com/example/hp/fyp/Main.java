@@ -1,5 +1,7 @@
 package com.example.hp.fyp;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -15,13 +17,19 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -66,7 +74,8 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
-
+    private CharSequence mTitle;
+    private Button gobtn;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,9 +88,25 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
         // Set the adapter for the list view
         mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_list_item, mPlanetTitles));
+                R.layout.drawer_list_item, mPlanetTitles){
+            ///code to make text of menu items black
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view =super.getView(position, convertView, parent);
+
+                TextView textView=(TextView) view.findViewById(android.R.id.text1);
+
+            /*YOUR CHOICE OF COLOR*/
+                textView.setTextColor(Color.BLACK);
+
+                return view;
+            }
+        });
+
+
+
         // Set the list's click listener
-        //mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
 
         mDrawerToggle = new ActionBarDrawerToggle(
@@ -129,6 +154,176 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
 
 
+    }
+
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            view.setBackgroundColor(Color.WHITE);
+            selectItem(position);
+        }
+    }
+
+    /** Swaps fragments in the main content view */
+    private void selectItem(int position) {
+        // Create a new fragment and specify the planet to show based on position
+        FragmentManager fragmentManager = getFragmentManager();
+
+        //Hiding Lets Go btn on vaigation item picked
+        gobtn =(Button) findViewById(R.id.GoBtn);
+        gobtn.setVisibility(View.GONE);
+
+        ///////Disable navigation drawer on item click/////
+        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        mDrawerToggle.onDrawerStateChanged(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        mDrawerToggle.setDrawerIndicatorEnabled(false);
+        mDrawerToggle.syncState();
+
+
+
+        if (position == 0) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.relativeLayout1, new CarFragment() )
+                    .addToBackStack(null)
+                    .commit();
+        } else if (position == 1) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.relativeLayout1, new TripFragment())
+                    .addToBackStack(null)
+                    .commit();
+        } else if (position == 2) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.relativeLayout1, new ProfileFragment())
+                    .addToBackStack(null)
+                    .commit();
+        }
+        else if (position == 3) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.relativeLayout1, new PaymentFragment())
+                    .addToBackStack(null)
+                    .commit();
+        }
+
+
+        // Highlight the selected item, update the title, and close the drawer
+        //mDrawerList.setItemChecked(position, true);
+        setTitle(mPlanetTitles[position]);
+        mDrawerLayout.closeDrawer(mDrawerList);
+    }
+
+    @Override
+    public void onBackPressed(){
+        if(getFragmentManager().getBackStackEntryCount() > 0){
+            getFragmentManager().popBackStackImmediate();
+            //Display Button again Lets Go on coming back to home page
+            gobtn =(Button) findViewById(R.id.GoBtn);
+            gobtn.setVisibility(View.VISIBLE);
+
+            //Enable Navigation drawer on home return
+            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            mDrawerToggle.onDrawerStateChanged(DrawerLayout.LOCK_MODE_UNLOCKED);
+            mDrawerToggle.setDrawerIndicatorEnabled(true);
+            mDrawerToggle.syncState();
+
+
+            //Change title to home again
+            getSupportActionBar().setTitle("FYP");
+
+
+
+
+        }
+        else{
+            super.onBackPressed();
+
+        }
+    }
+
+
+
+    @Override
+    public void setTitle(CharSequence title) {
+       mTitle = title;
+       getSupportActionBar().setTitle(mTitle);
+    }
+
+
+
+    //////////////////Car Page /////////////////////
+    public static class CarFragment extends Fragment {
+        public static final String ARG_PLANET_NUMBER = "planet_number";
+
+        public CarFragment() {
+            // Empty constructor required for fragment subclasses
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.carpage, container, false);
+
+            /*int i = getArguments().getInt(ARG_PLANET_NUMBER);
+            String planet = getResources().getStringArray(R.array.menu_array)[i];
+            getActivity().setTitle(planet);*/
+
+            return rootView;
+        }
+    }
+
+    //////////////Trip Fragment///////////////
+    public static class TripFragment extends Fragment {
+        public static final String ARG_PLANET_NUMBER = "planet_number";
+
+        public TripFragment() {
+            // Empty constructor required for fragment subclasses
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.trips, container, false);
+            /*int i = getArguments().getInt(ARG_PLANET_NUMBER);
+            String planet = getResources().getStringArray(R.array.menu_array)[i];
+            getActivity().setTitle(planet);*/
+            return rootView;
+        }
+    }
+    //////////////Profile Fragement//////////
+    public static class ProfileFragment extends Fragment {
+        public static final String ARG_PLANET_NUMBER = "planet_number";
+
+        public ProfileFragment() {
+            // Empty constructor required for fragment subclasses
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.profiles, container, false);
+            /*int i = getArguments().getInt(ARG_PLANET_NUMBER);
+            String planet = getResources().getStringArray(R.array.menu_array)[i];
+            getActivity().setTitle(planet);*/
+            return rootView;
+        }
+    }
+    /////////////Payment Fragement/////////
+    public static class PaymentFragment extends Fragment {
+        public static final String ARG_PLANET_NUMBER = "planet_number";
+
+        public PaymentFragment() {
+            // Empty constructor required for fragment subclasses
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.payments, container, false);
+            /*int i = getArguments().getInt(ARG_PLANET_NUMBER);
+            String planet = getResources().getStringArray(R.array.menu_array)[i];
+            getActivity().setTitle(planet);*/
+            return rootView;
+        }
     }
 
     @Override
