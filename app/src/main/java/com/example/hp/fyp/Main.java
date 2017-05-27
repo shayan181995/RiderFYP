@@ -9,13 +9,16 @@ import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ThemedSpinnerAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -29,6 +32,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -51,11 +55,21 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
 import static android.R.id.toggle;
+import static java.security.AccessController.getContext;
 
 /**
  * Created by HP on 5/11/2017.
@@ -157,6 +171,7 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     }
 
 
+
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -253,6 +268,8 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     //////////////////Car Page /////////////////////
     public static class CarFragment extends Fragment {
         public static final String ARG_PLANET_NUMBER = "planet_number";
+        private Spinner CarCategories;
+
 
         public CarFragment() {
             // Empty constructor required for fragment subclasses
@@ -266,6 +283,16 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
             /*int i = getArguments().getInt(ARG_PLANET_NUMBER);
             String planet = getResources().getStringArray(R.array.menu_array)[i];
             getActivity().setTitle(planet);*/
+
+            // Set the Car Category Options//////
+
+            CarCategories = (Spinner) rootView.findViewById(R.id.category);
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),R.array.CarCats,
+                    R.layout.support_simple_spinner_dropdown_item
+            );
+            adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+            CarCategories.setAdapter(adapter);
+            ///////////////////////////////////
 
             return rootView;
         }
@@ -292,6 +319,17 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     //////////////Profile Fragement//////////
     public static class ProfileFragment extends Fragment {
         public static final String ARG_PLANET_NUMBER = "planet_number";
+        private EditText UserName;
+        private EditText Country;
+        private EditText City;
+        private EditText Email;
+        private EditText Phone;
+        private EditText UserType;
+        private EditText Gender;
+        private Spinner PaymentMode;
+        private String[] PaymentArray;
+
+
 
         public ProfileFragment() {
             // Empty constructor required for fragment subclasses
@@ -304,6 +342,28 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
             /*int i = getArguments().getInt(ARG_PLANET_NUMBER);
             String planet = getResources().getStringArray(R.array.menu_array)[i];
             getActivity().setTitle(planet);*/
+
+            ///Disabling Non editable Profile Data///
+            Country = (EditText) rootView.findViewById(R.id.Country);
+            City = (EditText) rootView.findViewById(R.id.City);
+            Email = (EditText) rootView.findViewById(R.id.Email);
+            UserType = (EditText) rootView.findViewById(R.id.UserType);
+
+            Country.setEnabled(false);
+            City.setEnabled(false);
+            Email.setEnabled(false);
+            UserType.setEnabled(false);
+
+            // Set the Payment Options//////
+
+            PaymentMode = (Spinner) rootView.findViewById(R.id.PaymentMode);
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),R.array.SpinnerItems,
+                    R.layout.support_simple_spinner_dropdown_item
+                    );
+            adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+            PaymentMode.setAdapter(adapter);
+            ///////////////////////////////////
+
             return rootView;
         }
     }
@@ -388,7 +448,11 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
         final PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-
+        EditText etPlace = (EditText)autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
+        etPlace.setHint("Enter The Dropoff location");
+        etPlace.setBackground(ContextCompat.getDrawable(this, R.drawable.edittext));
+        etPlace.getLayoutParams().width=250;
+        etPlace.getLayoutParams().height=80;;
         //Code for restricting autocomplete results within karachi
        /* autocompleteFragment.setBoundsBias(new LatLngBounds(
                 new LatLng(24, 66),
