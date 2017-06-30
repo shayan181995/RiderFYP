@@ -69,6 +69,7 @@
         android:text="SignUp"
         android:textColor="#FFFFFF"
         android:background="@drawable/buttonshape"
+        android:onClick="SignUpUser"
         />
 
     <TextView

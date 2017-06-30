@@ -54,6 +54,15 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
@@ -77,6 +86,9 @@ import static java.security.AccessController.getContext;
 
 public class Main extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
+
+    private FirebaseAuth mAuth;
+    private static String UserID;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private GoogleMap mMap;
     private GoogleMap googleMap;
@@ -94,6 +106,14 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+
+        mAuth = FirebaseAuth.getInstance();
+        ///Fetching UserID of the user from login or signup page/////////
+        Bundle myData = getIntent().getExtras();
+        UserID = myData.getString("UserID");
+
+        ///////////////////////////
 
         ////////////////Navigation drawer work//////////////////
         mPlanetTitles = getResources().getStringArray(R.array.menu_array);
@@ -219,6 +239,12 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
                     .addToBackStack(null)
                     .commit();
         }
+        else if (position == 4) {
+            mAuth.signOut();
+            Intent i = new Intent(this,LoginActivity.class);
+            startActivity(i);
+
+        }
 
 
         // Highlight the selected item, update the title, and close the drawer
@@ -269,6 +295,13 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     public static class CarFragment extends Fragment {
         public static final String ARG_PLANET_NUMBER = "planet_number";
         private Spinner CarCategories;
+        private EditText CarMake;
+        private EditText CarModel;
+        private EditText CarCapacity;
+        private Spinner CarCategory;
+        private String CarKey;
+
+
 
 
         public CarFragment() {
@@ -279,6 +312,13 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carpage, container, false);
+
+            // Reference to layout Widgets//
+            CarMake = (EditText) rootView.findViewById(R.id.CarMake);
+            CarModel = (EditText) rootView.findViewById(R.id.CarModel);
+            CarCapacity = (EditText) rootView.findViewById(R.id.CarCapacity);
+            CarCategory = (Spinner) rootView.findViewById(R.id.category);
+            final Button button = (Button) rootView.findViewById(R.id.Register);
 
             /*int i = getArguments().getInt(ARG_PLANET_NUMBER);
             String planet = getResources().getStringArray(R.array.menu_array)[i];
@@ -294,8 +334,82 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
             CarCategories.setAdapter(adapter);
             ///////////////////////////////////
 
+            //Populate Car Page for edit//
+            final FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference ref = database.getReference("");
+            DatabaseReference CarRef = ref.child("cars");
+            CarRef.orderByChild("OwnerID").equalTo(UserID).addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+                    Car newCar = dataSnapshot.getValue(Car.class);
+                    CarKey = dataSnapshot.getKey();
+                    if(CarKey!=null) {
+                        button.setText("Update Car");
+                    }
+                    CarCategory.setSelection(newCar.Category);
+                    CarMake.setText(newCar.CarMake);
+                    CarModel.setText(String.valueOf(newCar.CarModel));
+                    CarCapacity.setText(String.valueOf(newCar.CarCapacity));
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+
+            });
+            //Populate Car Page for edit ends//
+
+            ///Button Click Work//
+
+            button.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    final FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    DatabaseReference ref = database.getReference("");
+                    DatabaseReference CarRef = ref.child("cars");
+                    DatabaseReference newCarRef = CarRef.push();
+                    //Pushing in Car Table
+                    Car mCar = new Car(UserID,CarCategory.getSelectedItemPosition(),CarMake.getText().toString(),
+                            Integer.parseInt(CarModel.getText().toString()),Integer.parseInt(CarCapacity.getText().toString()));
+
+                    ////////////////////////////
+
+                    // Get the unique ID generated by a push()
+                    //String ProfileId = newUserRef.getKey();
+                    ///////////////////////////////
+
+                    //Add in Database///
+                    if(CarKey!=null) {
+                        CarRef.child(CarKey).setValue(mCar);
+                    }
+                    else{
+                        newCarRef.setValue(mCar);
+                    }
+                }
+            });
+            ///Button Click Work Ends//
+
             return rootView;
         }
+
     }
 
     //////////////Trip Fragment///////////////
@@ -412,9 +526,13 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     }
     protected void onStart() {
         mGoogleApiClient.connect();
-
-
         super.onStart();
+        // Check if user is signed in (non-null) and update UI accordingly.
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if(currentUser==null){
+            Intent i = new Intent(this,LoginActivity.class);
+            startActivity(i);
+        }
     }
 
     protected void onStop() {
@@ -538,7 +656,6 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
             String address = addresses.get(0).getAddressLine(0);
             edittext.setText(address);
             edittext.setEnabled(false);
-
 
 
 
