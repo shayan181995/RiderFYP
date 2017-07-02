@@ -2,6 +2,7 @@ package com.example.hp.fyp;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -34,6 +35,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -72,7 +74,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -102,11 +106,18 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mTitle;
     private Button gobtn;
+    private double StartLat;
+    private double StartLng;
+    private double EndLat;
+    private double EndLng;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+
+        //Btn of click
+        gobtn = (Button) findViewById(R.id.GoBtn);
 
         mAuth = FirebaseAuth.getInstance();
         ///Fetching UserID of the user from login or signup page/////////
@@ -639,6 +650,10 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
+
+                //For Db work//
+                EndLat = place.getLatLng().latitude;
+                EndLng = place.getLatLng().longitude;
                 // TODO: Get info about the selected place.
 
                 //My start position
@@ -697,6 +712,8 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         edittext = (EditText) findViewById(R.id.editText);
        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
+        StartLat = mLastLocation.getLatitude();
+        StartLng = mLastLocation.getLongitude();
         if (mLastLocation != null) {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
             List<Address> addresses = null;
@@ -728,6 +745,74 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    ///GoNow Button Clicked//
+    public void StartRide(View view){
+
+        int EndMinute;
+        int EndHour;
+
+        //Fetching Car of this user//
+
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final DatabaseReference ref = database.getReference("");
+        DatabaseReference CarRef = ref.child("cars");
+        final Calendar calendar = Calendar.getInstance();
+        final Calendar EndTime = Calendar.getInstance();
+        EndHour =EndTime.get(Calendar.HOUR);
+        EndMinute =EndTime.get(Calendar.MINUTE)+20;
+        if(EndMinute >= 60){
+            EndHour++;
+            EndMinute--;
+        }
+        EndTime.set(Calendar.MINUTE,EndMinute);
+        EndTime.set(Calendar.HOUR,EndHour);
+        //SimpleDateFormat format = new SimpleDateFormat("EEEE, MMMM d, yyyy 'at' h:mm a");
+        //System.out.println(format.format(calendar.getTime()));
+        CarRef.orderByChild("OwnerID").equalTo(UserID).addChildEventListener(new ChildEventListener() {
+
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+                OwnerRide OR = new OwnerRide(dataSnapshot.getKey(),StartLat,StartLng,EndLat,EndLng,calendar.getTime(),EndTime.getTime(),"Active");
+                DatabaseReference OwnerRideRef = ref.child("ownerride");
+                DatabaseReference newOwnerRideRef = OwnerRideRef.push();
+                newOwnerRideRef.setValue(OR);
+                gobtn.setEnabled(false);
+
+                Context context = getApplicationContext();
+                CharSequence text = "Ride Started.. Please Wait while we fetch your Co-riders";
+                int duration = Toast.LENGTH_LONG;
+
+                Toast toast = Toast.makeText(context, text, duration);
+                toast.show();
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+        });
+
+
 
     }
 }
