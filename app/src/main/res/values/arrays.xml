@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="menu_array" xmlns:android="http://schemas.android.com/apk/res/android">
+        <item>My Car</item>
+        <item>My Trips</item>
+        <item>My Profile</item>
+        <item>My Feedbacks</item>
+        <item>Logout</item>
+    </string-array>
+    <string-array name="SpinnerItems">
+        <item>Cash</item>
+        <item>Credit Card</item>
+    </string-array>
+    <string-array name="CarCats">
+        <item>Business</item>
+        <item>Economy</item>
+        <item>Go</item>
+    </string-array>
+</resources>

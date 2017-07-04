@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.hp.fyp">
+    package="com.example.hp.RiderFYP">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -21,15 +21,15 @@
             android:value="AIzaSyBLujbWkTLoDlbrFb__2YfIeLPyqDi4-_U" />
 
 
-        <activity android:name=".LoginActivity">
+        <activity android:name="com.example.hp.RiderFYP.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Main"></activity>
-        <activity android:name=".SignUp"></activity>
+        <activity android:name="com.example.hp.RiderFYP.Main"></activity>
+        <activity android:name="com.example.hp.RiderFYP.SignUp"></activity>
     </application>
 
 </manifest>

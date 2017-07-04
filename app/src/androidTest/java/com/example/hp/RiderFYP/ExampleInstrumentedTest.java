@@ -1,4 +1,4 @@
-package com.example.hp.fyp;
+package com.example.hp.RiderFYP;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

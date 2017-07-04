@@ -1,4 +1,4 @@
-package com.example.hp.fyp;
+package com.example.hp.RiderFYP;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -10,20 +10,14 @@ import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ThemedSpinnerAdapter;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,20 +25,16 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -63,26 +53,11 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
-import static android.R.id.toggle;
-import static java.security.AccessController.getContext;
 
 /**
  * Created by HP on 5/11/2017.
@@ -753,9 +728,12 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
         int EndMinute;
         int EndHour;
+        final Double Distance;
+        final Double TotalFare;
 
+        Distance = distance(StartLat,StartLng,EndLat,EndLng) * 2;
+        TotalFare = Distance * 50;
         //Fetching Car of this user//
-
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         final DatabaseReference ref = database.getReference("");
         DatabaseReference CarRef = ref.child("cars");
@@ -763,20 +741,19 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         final Calendar EndTime = Calendar.getInstance();
         EndHour =EndTime.get(Calendar.HOUR);
         EndMinute =EndTime.get(Calendar.MINUTE)+20;
-        if(EndMinute >= 60){
+        /*if(EndMinute >= 60){
             EndHour++;
             EndMinute--;
         }
+        */
         EndTime.set(Calendar.MINUTE,EndMinute);
         EndTime.set(Calendar.HOUR,EndHour);
-        //SimpleDateFormat format = new SimpleDateFormat("EEEE, MMMM d, yyyy 'at' h:mm a");
-        //System.out.println(format.format(calendar.getTime()));
         CarRef.orderByChild("OwnerID").equalTo(UserID).addChildEventListener(new ChildEventListener() {
 
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-                OwnerRide OR = new OwnerRide(dataSnapshot.getKey(),StartLat,StartLng,EndLat,EndLng,calendar.getTime(),EndTime.getTime(),"Active");
+                OwnerRide OR = new OwnerRide(dataSnapshot.getKey(),StartLat,StartLng,EndLat,EndLng,Distance,TotalFare,calendar.getTime(),EndTime.getTime(),"Active");
                 DatabaseReference OwnerRideRef = ref.child("ownerride");
                 DatabaseReference newOwnerRideRef = OwnerRideRef.push();
                 newOwnerRideRef.setValue(OR);
@@ -814,5 +791,27 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
 
 
+    }
+
+    //Calculating Distance btw two locations//
+    private double distance(double lat1, double lon1, double lat2, double lon2) {
+        double theta = lon1 - lon2;
+        double dist = Math.sin(deg2rad(lat1))
+                * Math.sin(deg2rad(lat2))
+                + Math.cos(deg2rad(lat1))
+                * Math.cos(deg2rad(lat2))
+                * Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515;
+        return (dist);
+    }
+
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    private double rad2deg(double rad) {
+        return (rad * 180.0 / Math.PI);
     }
 }

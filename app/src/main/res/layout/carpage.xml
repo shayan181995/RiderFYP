@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#ffffff">
+
+
+    <Spinner
+        android:id="@+id/category"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="39dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/CarMake"
+        android:layout_alignEnd="@+id/CarMake"
+        android:layout_alignLeft="@+id/CarMake"
+        android:layout_alignStart="@+id/CarMake" />
+
+    <EditText
+        android:id="@+id/CarMake"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="68dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:layout_marginRight="11dp"
+        android:layout_marginEnd="11dp"
+        android:layout_below="@+id/category"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <EditText
+        android:id="@+id/CarModel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="54dp"
+        android:ems="10"
+        android:inputType="number"
+        android:layout_below="@+id/CarMake"
+        android:layout_alignLeft="@+id/CarMake"
+        android:layout_alignStart="@+id/CarMake" />
+
+    <EditText
+        android:id="@+id/CarCapacity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:ems="10"
+        android:inputType="number"
+        android:layout_below="@+id/CarModel"
+        android:layout_alignLeft="@+id/CarModel"
+        android:layout_alignStart="@+id/CarModel" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Car Category"
+        android:layout_above="@+id/CarMake"
+        android:layout_toLeftOf="@+id/Register"
+        android:layout_toStartOf="@+id/Register"
+        android:layout_marginRight="12dp"
+        android:layout_marginEnd="12dp" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Car Make"
+        android:layout_alignBaseline="@+id/CarMake"
+        android:layout_alignBottom="@+id/CarMake"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignStart="@+id/textView2" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Car Model"
+        android:layout_alignBaseline="@+id/CarModel"
+        android:layout_alignBottom="@+id/CarModel"
+        android:layout_alignRight="@+id/textView4"
+        android:layout_alignEnd="@+id/textView4" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Capacity"
+        android:layout_alignBaseline="@+id/CarCapacity"
+        android:layout_alignBottom="@+id/CarCapacity"
+        android:layout_alignLeft="@+id/textView5"
+        android:layout_alignStart="@+id/textView5" />
+
+    <Button
+        android:id="@+id/Register"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:text="Register Car"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/buttonshape"
+        android:textColor="#FFFFFF"
+        android:layout_below="@+id/CarCapacity"
+        android:layout_centerHorizontal="true"
+        />
+
+</RelativeLayout>

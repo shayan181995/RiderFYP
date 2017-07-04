@@ -1,4 +1,4 @@
-package com.example.hp.fyp;
+package com.example.hp.RiderFYP;
 
 import org.junit.Test;
 
