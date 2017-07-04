@@ -729,14 +729,11 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         int EndMinute;
         int EndHour;
         final Double Distance;
-        final Double TotalFare;
 
         Distance = distance(StartLat,StartLng,EndLat,EndLng) * 2;
-        TotalFare = Distance * 50;
         //Fetching Car of this user//
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         final DatabaseReference ref = database.getReference("");
-        DatabaseReference CarRef = ref.child("cars");
         final Calendar calendar = Calendar.getInstance();
         final Calendar EndTime = Calendar.getInstance();
         EndHour =EndTime.get(Calendar.HOUR);
@@ -748,48 +745,16 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         */
         EndTime.set(Calendar.MINUTE,EndMinute);
         EndTime.set(Calendar.HOUR,EndHour);
-        CarRef.orderByChild("OwnerID").equalTo(UserID).addChildEventListener(new ChildEventListener() {
-
-
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-                OwnerRide OR = new OwnerRide(dataSnapshot.getKey(),StartLat,StartLng,EndLat,EndLng,Distance,TotalFare,calendar.getTime(),EndTime.getTime(),"Active");
-                DatabaseReference OwnerRideRef = ref.child("ownerride");
-                DatabaseReference newOwnerRideRef = OwnerRideRef.push();
-                newOwnerRideRef.setValue(OR);
-                gobtn.setEnabled(false);
-
-                Context context = getApplicationContext();
-                CharSequence text = "Ride Started.. Please Wait while we fetch your Co-riders";
-                int duration = Toast.LENGTH_LONG;
-
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-
-        });
-
-
+        RequestRide RR = new RequestRide(UserID,StartLat,StartLng,EndLat,EndLng,Distance,calendar.getTime(),EndTime.getTime(),"Active");
+        DatabaseReference RequestRideRef = ref.child("RequestRide");
+        DatabaseReference newRequestRideRef = RequestRideRef.push();
+        newRequestRideRef.setValue(RR);
+        gobtn.setEnabled(false);
+        Context context = getApplicationContext();
+        CharSequence text = "Ride Started.. Please Wait while we fetch the Car Owmner Travelling in your route";
+        int duration = Toast.LENGTH_LONG;
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
 
     }
 

@@ -94,7 +94,7 @@ public class SignUp extends AppCompatActivity {
                             FirebaseUser user = mAuth.getCurrentUser();
 
                             //Adding Userid in profile table///
-                            User muser = new User(user.getUid(),semail,sname,scountry,scity,0,"Captain","",0);
+                            User muser = new User(user.getUid(),semail,sname,scountry,scity,0,"Rider","",0);
                             DatabaseReference usersRef = ref.child("users");
                             DatabaseReference newUserRef = usersRef.push();
                             ////////////////////////////
