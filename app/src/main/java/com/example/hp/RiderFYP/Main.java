@@ -17,6 +17,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,11 +54,13 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Created by HP on 5/11/2017.
@@ -750,11 +753,71 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         DatabaseReference newRequestRideRef = RequestRideRef.push();
         newRequestRideRef.setValue(RR);
         gobtn.setEnabled(false);
+
+        //Alert Box ///
         Context context = getApplicationContext();
-        CharSequence text = "Ride Started.. Please Wait while we fetch the Car Owmner Travelling in your route";
+        CharSequence text = "Ride Started.. Please Wait while we fetch the Car Owner Travelling in your route";
         int duration = Toast.LENGTH_LONG;
         Toast toast = Toast.makeText(context, text, duration);
         toast.show();
+
+        //Finding Matching Rides//
+        DatabaseReference OwnerRideRef = ref.child("ownerride");
+        OwnerRideRef.orderByKey().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    //edittext.setText(snapshot.getKey());
+                   // break;
+                    OwnerRide OR = snapshot.getValue(OwnerRide.class);
+                    //EndTime of owner should be after current time so its not expired
+                    int diff = OR.EndTime.compareTo(Calendar.getInstance().getTime());
+                    //edittext.setText(OR.Status);
+                    if(Objects.equals(OR.Status, "Active")) {
+                        if (diff > 0) {
+                            //Alert Box ///
+                            double OwnerStartLat = OR.StartLat;
+                            double OwnerStartLng = OR.StartLng;
+                            double OwnerEndLat = OR.EndLat;
+                            double OwnerEndLng = OR.EndLng;
+                            double StartDistance = distance(OwnerStartLat, OwnerStartLng, StartLat, StartLng);
+                            // edittext.setText((int) StartDistance);
+                            if (StartDistance <= 1) {
+                                double EndDistance = distance(OwnerEndLat, OwnerEndLng, EndLat, EndLng);
+
+                                if (EndDistance <= 1.5) {
+                                    edittext.setText(String.valueOf(snapshot.getKey()));
+                                    break;
+                                    //finding CarCapacity so if it can accomodate another ride//
+                                    /*DatabaseReference CarRef = ref.child("cars");
+                                    CarRef.child(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                                Car objCar = snapshot.getValue(Car.class);
+                                                edittext.setText(String.valueOf(objCar.CarCapacity));
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError databaseError) {
+
+                                        }
+                                    });
+                                    break;
+                                    */
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
 
     }
 
