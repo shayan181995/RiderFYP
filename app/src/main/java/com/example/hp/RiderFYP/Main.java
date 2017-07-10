@@ -58,8 +58,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -751,6 +753,7 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
         RequestRide RR = new RequestRide(UserID,StartLat,StartLng,EndLat,EndLng,Distance,calendar.getTime(),EndTime.getTime(),"Active");
         DatabaseReference RequestRideRef = ref.child("RequestRide");
         DatabaseReference newRequestRideRef = RequestRideRef.push();
+        final String RRKey = newRequestRideRef.getKey();
         newRequestRideRef.setValue(RR);
         gobtn.setEnabled(false);
 
@@ -767,46 +770,160 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    final String OwnerRideKey = snapshot.getKey();
                     //edittext.setText(snapshot.getKey());
                    // break;
-                    OwnerRide OR = snapshot.getValue(OwnerRide.class);
+                    final OwnerRide OR = snapshot.getValue(OwnerRide.class);
                     //EndTime of owner should be after current time so its not expired
                     int diff = OR.EndTime.compareTo(Calendar.getInstance().getTime());
                     //edittext.setText(OR.Status);
                     if(Objects.equals(OR.Status, "Active")) {
                         if (diff > 0) {
                             //Alert Box ///
-                            double OwnerStartLat = OR.StartLat;
-                            double OwnerStartLng = OR.StartLng;
-                            double OwnerEndLat = OR.EndLat;
-                            double OwnerEndLng = OR.EndLng;
+                            final double OwnerStartLat = OR.StartLat;
+                            final double OwnerStartLng = OR.StartLng;
+                            final double OwnerEndLat = OR.EndLat;
+                            final double OwnerEndLng = OR.EndLng;
                             double StartDistance = distance(OwnerStartLat, OwnerStartLng, StartLat, StartLng);
                             // edittext.setText((int) StartDistance);
                             if (StartDistance <= 1) {
                                 double EndDistance = distance(OwnerEndLat, OwnerEndLng, EndLat, EndLng);
-
+                                edittext.setText(String.valueOf(EndDistance));
                                 if (EndDistance <= 1.5) {
-                                    edittext.setText(String.valueOf(snapshot.getKey()));
-                                    break;
-                                    //finding CarCapacity so if it can accomodate another ride//
-                                    /*DatabaseReference CarRef = ref.child("cars");
-                                    CarRef.child(snapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                    //edittext.setText(String.valueOf(snapshot.getKey()));
 
+                                    //break;
+                                    //finding CarCapacity so if it can accomodate another ride//
+                                    DatabaseReference CarRef = ref.child("cars");
+                                    CarRef.child(OR.CarID).addValueEventListener(new ValueEventListener() {
                                         @Override
                                         public void onDataChange(DataSnapshot dataSnapshot) {
-                                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                                                Car objCar = snapshot.getValue(Car.class);
-                                                edittext.setText(String.valueOf(objCar.CarCapacity));
-                                            }
+                                            final Car objCar = dataSnapshot.getValue(Car.class);
+                                            //Trip Table Work///
+                                            final DatabaseReference TripRef = ref.child("Trips");
+                                            final DatabaseReference newTripRef = TripRef.child(OwnerRideKey);
+
+
+
+                                            //Checking if this OwnerRide already has customers then append otherwise add new trip with new key
+                                            newTripRef.orderByKey().addListenerForSingleValueEvent(new ValueEventListener() {
+                                                int NoOfRiders=0;
+                                                @Override
+                                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                                    DatabaseReference[] oldReqTripRef = new DatabaseReference[10];
+                                                    DatabaseReference newReqTripRef;
+                                                    DatabaseReference OwnerReqTripRef;
+                                                    if(dataSnapshot.getValue()!= null) { //if a rider is already there
+
+                                                        TripObj appendTrip = dataSnapshot.getValue(TripObj.class);
+                                                        Trip[] updateTrip = new Trip[10];
+
+                                                        //if the Car has capacity then new rider joins
+                                                            if (appendTrip.CapacityLeft > 0) {
+
+
+
+                                                            int j=0;
+                                                            appendTrip.TotalDistance = appendTrip.TotalDistance + Distance;
+                                                            appendTrip.CapacityLeft = appendTrip.CapacityLeft - 1;
+                                                            appendTrip.NoOfRiders = appendTrip.NoOfRiders + 1;
+
+                                                            //Looping the already added riders now to update their fares
+                                                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                                                //Alert Box ///
+                                                                /*Context context = getApplicationContext();
+                                                                CharSequence text = String.valueOf(snapshot);
+                                                                int duration = Toast.LENGTH_LONG;
+                                                                Toast toast = Toast.makeText(context, text, duration);
+                                                                toast.show();*/
+
+                                                                String oldRRKey = snapshot.getKey();
+                                                                Trip appTrip = snapshot.getValue(Trip.class);
+                                                                double oldFareShare = (appTrip.Distance / appendTrip.TotalDistance) * 100;
+                                                                appTrip.Fare = (oldFareShare * OR.TotalFare) / 100;
+                                                                oldReqTripRef[j] = newTripRef.child(oldRRKey);
+                                                                updateTrip[j] = new Trip(appTrip.StartLat,appTrip.StartLng,appTrip.EndLat,
+                                                                        appTrip.EndLng,appTrip.Distance,appTrip.StartTime,null,appTrip.Fare);
+                                                                j++;
+                                                                if(j==(appendTrip.NoOfRiders)) {
+                                                                    break;
+                                                                }
+
+                                                            }
+                                                            
+                                                            TripObj ReDoTrip = new TripObj(appendTrip.CapacityLeft,appendTrip.TotalDistance,"Active",appendTrip.NoOfRiders);
+                                                            newTripRef.setValue(ReDoTrip);
+                                                            for(int i=0;i<j;i++) {
+                                                                oldReqTripRef[i].setValue(updateTrip[i]);
+                                                            }
+                                                            double FareShare = (Distance / appendTrip.TotalDistance) * 100;
+                                                            double Fare = (FareShare * OR.TotalFare) / 100;
+                                                            //adding the new rider in table
+                                                            Calendar currTime = Calendar.getInstance();
+                                                            Trip myTrip = new Trip(StartLat, StartLng, EndLat, EndLng, Distance, currTime.getTime(),
+                                                                    null, Fare);
+                                                            newReqTripRef = newTripRef.child(RRKey);
+                                                            newReqTripRef.setValue(myTrip);
+
+                                                                //Pin Owners location Marker on the app
+                                                                //Push Notification Sent to owner and location of rider pinned throughit//
+
+
+
+                                                        }
+                                                    }
+                                                    else{ //add first rider to trip
+                                                        //if a Rider is added for first time in a trip
+                                                        NoOfRiders++;
+                                                        int CapacityLeft = objCar.CarCapacity-1;
+                                                        double TotalDistance = OR.Distance+Distance;
+                                                        double FareShare = (Distance/TotalDistance) * 100;
+                                                        double Fare = (FareShare * OR.TotalFare) /100;
+
+                                                        TripObj objTrip = new TripObj(CapacityLeft,TotalDistance,"Active",NoOfRiders);
+                                                        newTripRef.setValue(objTrip);
+
+                                                        Calendar currTime = Calendar.getInstance();
+                                                        Trip myTrip = new Trip(StartLat,StartLng,EndLat,EndLng,Distance,currTime.getTime(),
+                                                                null,Fare);
+                                                        newReqTripRef = newTripRef.child(RRKey);
+                                                        newReqTripRef.setValue(myTrip);
+
+                                                        //Owner Trip also Registered//
+                                                        double OwnerFareShare = (OR.Distance/TotalDistance) * 100;
+                                                        double OwnerFare = (OwnerFareShare * OR.TotalFare) /100;
+                                                        Trip OwnerTrip = new Trip(OwnerStartLat,OwnerStartLng,OwnerEndLat,OwnerEndLng,
+                                                                OR.Distance,currTime.getTime(),null,OwnerFare);
+                                                        OwnerReqTripRef = newTripRef.child(OwnerRideKey);
+                                                        OwnerReqTripRef.setValue(OwnerTrip);
+                                                        //Trip Table Work Ends///
+                                                        //edittext.setText(String.valueOf(objCar.CarCapacity));
+
+
+                                                        //Pin Owners location Marker on the app
+                                                        //Push Notification Sent to owner and location of rider pinned throughit//
+                                                    }
+
+
+
+                                                }
+
+                                                @Override
+                                                public void onCancelled(DatabaseError databaseError) {
+                                                    System.out.println("The read failed: " + databaseError.getCode());
+                                                }
+                                            });
+
+
                                         }
 
                                         @Override
                                         public void onCancelled(DatabaseError databaseError) {
-
+                                            System.out.println("The read failed: " + databaseError.getCode());
                                         }
                                     });
                                     break;
-                                    */
+
                                 }
                             }
 
