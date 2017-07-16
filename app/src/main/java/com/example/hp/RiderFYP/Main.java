@@ -1,5 +1,6 @@
 package com.example.hp.RiderFYP;
 
+import android.app.DownloadManager;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
@@ -10,7 +11,9 @@ import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.SyncStateContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -33,6 +36,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Response;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
@@ -56,6 +60,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -63,6 +69,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 /**
  * Created by HP on 5/11/2017.
@@ -865,8 +876,10 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
                                                             newReqTripRef = newTripRef.child(RRKey);
                                                             newReqTripRef.setValue(myTrip);
 
+
                                                                 //Pin Owners location Marker on the app
                                                                 //Push Notification Sent to owner and location of rider pinned throughit//
+                                                               // sendNotification(OR.PushKey);
 
 
 
@@ -902,6 +915,9 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
 
                                                         //Pin Owners location Marker on the app
                                                         //Push Notification Sent to owner and location of rider pinned throughit//
+
+                                                        sendNotification(OR.PushKey,objCar.OwnerID,OR.StartLat,OR.StartLng,
+                                                                OR.EndLat,OR.EndLng,StartLat,StartLng,EndLat,EndLng);
                                                     }
 
 
@@ -959,4 +975,49 @@ public class Main extends AppCompatActivity implements OnMapReadyCallback, Googl
     private double rad2deg(double rad) {
         return (rad * 180.0 / Math.PI);
     }
+
+    public static final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
+    private void sendNotification(final String reg_token,final String OwnerID,final double OStartLat,final double OStartLng,
+                                  final double OEndLat,final double OEndLng,final double RStartLat,final double RStartLng,
+                                  final double REndLat,final double REndLng) {
+        new AsyncTask<Void,Void,Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    JSONObject json=new JSONObject();
+                    JSONObject dataJson=new JSONObject();
+                    JSONObject payload= new JSONObject();
+                    payload.put("OwnerID",OwnerID);
+                    payload.put("OStartLat",OStartLat);
+                    payload.put("OStartLng",OStartLng);
+                    payload.put("OEndLat",OEndLat);
+                    payload.put("OEndLng",OEndLng);
+                    payload.put("RStartLat",RStartLat);
+                    payload.put("RStartLng",RStartLng);
+                    payload.put("REndLat",REndLat);
+                    payload.put("REndLng",REndLng);
+                    dataJson.put("body","Hi this is sent from device to device");
+                    dataJson.put("title","dummy title");
+                    json.put("data",payload);
+                    json.put("notification",dataJson);
+                    json.put("to",reg_token);
+                    RequestBody body = RequestBody.create(JSON, json.toString());
+                    Request request = new Request.Builder()
+                            .header("Authorization","key=AIzaSyAJoWiSUOP9GZ8EZTmBR6y8b1bDwjxSgsE")
+                            .url("https://fcm.googleapis.com/fcm/send")
+                            .post(body)
+                            .build();
+                    okhttp3.Response response = client.newCall(request).execute();
+                    String finalResponse = response.body().string();
+                }catch (Exception e){
+                    //Log.d(TAG,e+"");
+                }
+                return null;
+            }
+        }.execute();
+
+    }
+
 }

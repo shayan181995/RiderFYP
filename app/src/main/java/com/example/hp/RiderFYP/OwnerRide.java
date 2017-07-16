@@ -17,12 +17,13 @@ public class OwnerRide {
     public Date StartTime;
     public Date EndTime;
     public String Status;
+    public String PushKey;
 
     public OwnerRide(){
 
     }
 
-    public OwnerRide(String carID, double startLat, double startLng, double endLat, double endLng, double distance, double totalFare, Date startTime, Date endTime, String status) {
+    public OwnerRide(String carID, double startLat, double startLng, double endLat, double endLng, double distance, double totalFare, Date startTime, Date endTime, String status,String pushkey) {
         CarID = carID;
         StartLat = startLat;
         StartLng = startLng;
@@ -33,5 +34,6 @@ public class OwnerRide {
         StartTime = startTime;
         EndTime = endTime;
         Status = status;
+        PushKey = pushkey;
     }
 }
